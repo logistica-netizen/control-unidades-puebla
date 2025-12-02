@@ -1,70 +1,48 @@
-# 🚛 Sistema de Control de Unidades - Patio Puebla
+# 🚚 Control de Unidades Puebla
 
-Sistema web para el control, registro y despacho de unidades de transporte **con sincronización en tiempo real**.
+Sistema web para la gestión y control de unidades de transporte en logística Puebla.
 
-## 🚀 Características Principales
+## ✨ Características
 
-### ✅ **Sincronización en Tiempo Real**
-- **Firebase Integration**: Todos los cambios se sincronizan instantáneamente entre dispositivos
-- **Modo offline**: Funciona sin conexión a internet
-- **Backup automático**: Datos respaldados en la nube
+- ✅ **Gestión completa de unidades** (agregar, editar, eliminar)
+- ✅ **Seguimiento en tiempo real** de estado de unidades
+- ✅ **Filtros y búsqueda** avanzada
+- ✅ **Exportación/Importación** de datos (CSV)
+- ✅ **Respaldo automático** en navegador
+- ✅ **Responsive design** (funciona en móviles y tablets)
+- ✅ **Instalable como PWA** (Progressive Web App)
 
-### ✅ **Funcionalidades Completas**
-- **Registro de unidades** con todos los datos necesarios
-- **Visualización organizada** por tipo (Sencillo/Full)
-- **Despacho automático** por WhatsApp con mensajes predefinidos
-- **Exportación** a PDF y Excel
-- **Gestión de estatus** (Taller, Listo, Sin Operador)
-- **Estadísticas en tiempo real**
+## 🚀 Cómo usar
 
-### ✅ **Diseño Profesional**
-- **Responsive**: Funciona en móviles y desktop
-- **Tema FRATSA**: Colores corporativos
-- **Interfaz intuitiva**: Fácil de usar
-- **PWA**: Instalable como aplicación nativa
+### Online
+Accede a la aplicación en:  
+**https://logistica-netizen.github.io/control-unidades-puebla/**
 
-## 📱 Cómo Usar
+### Local
+1. Clona este repositorio
+2. Abre `index.html` en tu navegador
+3. ¡Listo! Los datos se guardan automáticamente en tu navegador
 
-### 1. Registro de Unidades
-1. Ve a la pestaña **"Registro"**
-2. Completa todos los campos obligatorios (*)
-3. Teléfono: **10 dígitos sin espacios**
-4. Haz clic en **"Registrar Unidad"**
+## 📋 Estados de Unidades
 
-### 2. Visualización
-1. Ve a la pestaña **"Visualización"**
-2. Las unidades se ordenan por antigüedad
-3. **Colores según estatus**:
-   - 🔴 **Rojo**: Taller
-   - 🟢 **Verde**: Listo
-   - 🟡 **Amarillo**: Sin operador
-4. Haz clic en **"EDITAR"** para cambiar estatus
+1. **🟢 Disponible** - Lista para servicio
+2. **🔵 En Ruta** - En tránsito activo
+3. **🟠 Mantenimiento** - En revisión/taller
+4. **🔴 Inactivo** - Fuera de servicio
 
-### 3. Despacho
-1. Solo unidades con estatus **"LISTO"**
-2. Haz clic en **"DESPACHAR"**
-3. Se abre WhatsApp con mensaje automático
-4. La unidad se marca como **despachada** automáticamente
+## 💾 Funciones de datos
 
-### 4. Configuración
-- **Exportar/Importar respaldo**: Gestión de datos
-- **Estadísticas**: Conteo de unidades
-- **Compartir**: Comparte el sistema con tu equipo
-- **Limpieza**: Elimina unidades despachadas
+- **Guardado automático**: Los datos se guardan en tu navegador
+- **Exportar CSV**: Descarga todos los datos en formato CSV
+- **Importar CSV**: Carga datos desde archivos CSV
+- **Backup manual**: Guarda copia de seguridad en JSON
+- **Restablecer**: Limpia todos los datos (con confirmación)
 
-## 🔥 Sincronización en Tiempo Real
+## 🔧 Tecnologías utilizadas
 
-### ¿Cómo funciona?
-1. **Registras una unidad** en la computadora A
-2. **Aparece automáticamente** (2-3 segundos) en la computadora B
-3. **Todos los cambios** se sincronizan automáticamente
-4. **Funciona offline**: Los datos se guardan localmente y se sincronizan al reconectar
+- HTML5, CSS3, JavaScript (ES6+)
+- LocalStorage para persistencia de datos
+- CSS Grid y Flexbox para layout
+- Progressive Web App (PWA) ready
 
-### Estado de conexión:
-- 🟢 **En Tiempo Real**: Conectado a Firebase
-- 🔴 **Sin Conexión**: Sin internet
-- 🟡 **Modo Local**: Firebase no disponible
-
-## 🌐 Acceso
-
-### URL de la aplicación:
+## 📁 Estructura del proyecto
