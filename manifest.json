@@ -2,122 +2,19 @@
   "name": "FRATSA - Control de Unidades",
   "short_name": "Control FRATSA",
   "description": "Sistema de control y despacho de unidades de transporte - Patio Puebla",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#8B0000",
   "theme_color": "#8B0000",
-  "orientation": "portrait",
-  "scope": "/",
-  "lang": "es-MX",
+  "orientation": "any",
+  "categories": ["business", "productivity"],
+  "lang": "es",
   
   "icons": [
     {
-      "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/truck.svg",
-      "sizes": "72x72",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/truck.svg",
-      "sizes": "96x96",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/truck.svg",
-      "sizes": "128x128",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/truck.svg",
-      "sizes": "144x144",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/truck.svg",
-      "sizes": "152x152",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/truck.svg",
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚛</text></svg>",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/truck.svg",
-      "sizes": "384x384",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/truck.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ],
-  
-  "screenshots": [
-    {
-      "src": "https://via.placeholder.com/540x720/8B0000/FFFFFF?text=Control+FRATSA",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "https://via.placeholder.com/720x540/8B0000/FFFFFF?text=Control+FRATSA",
-      "sizes": "720x540",
-      "type": "image/png",
-      "form_factor": "wide"
-    }
-  ],
-  
-  "categories": ["business", "productivity", "utilities"],
-  "dir": "ltr",
-  
-  "shortcuts": [
-    {
-      "name": "Nueva Unidad",
-      "short_name": "Nueva",
-      "description": "Registrar nueva unidad",
-      "url": "/#registro",
-      "icons": [
-        {
-          "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/plus-circle.svg",
-          "sizes": "96x96",
-          "type": "image/svg+xml"
-        }
-      ]
-    },
-    {
-      "name": "Ver Unidades",
-      "short_name": "Ver",
-      "description": "Ver todas las unidades",
-      "url": "/#visualizacion",
-      "icons": [
-        {
-          "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/eye.svg",
-          "sizes": "96x96",
-          "type": "image/svg+xml"
-        }
-      ]
-    },
-    {
-      "name": "Despachar",
-      "short_name": "Despacho",
-      "description": "Despachar unidades",
-      "url": "/#despacho",
-      "icons": [
-        {
-          "src": "https://cdn.jsdelivr.net/npm/@mdi/svg@7.2.96/svg/whatsapp.svg",
-          "sizes": "96x96",
-          "type": "image/svg+xml"
-        }
-      ]
+      "type": "image/svg+xml"
     }
   ]
 }
