@@ -13,7 +13,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 0;
     margin: 0;
-    padding-bottom: 80px; /* Para los botones fijos */
+    padding-bottom: 80px;
 }
 
 .header {
@@ -500,4 +500,37 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #600000;
+}
+
+/* Estadísticas */
+.card.bg-light {
+    background-color: #f8f9fa !important;
+    border: 1px solid #dee2e6;
+}
+
+.card.bg-light .card-title {
+    color: var(--fratsa-primary);
+    font-weight: bold;
+}
+
+/* Notificaciones */
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* Animaciones adicionales */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse {
+    animation: pulse 0.5s ease;
 }
