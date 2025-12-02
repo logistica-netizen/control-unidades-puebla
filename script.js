@@ -1,31 +1,86 @@
 // =============================================
 // CONTROL DE UNIDADES - PATIO PUEBLA
 // FRATSA S.A. DE C.V.
-// Versión: 2.0.0
+// Versión: 2.1.0 (con Firebase)
 // =============================================
 
 // Variables globales
-let unidades = JSON.parse(localStorage.getItem('unidadesPuebla')) || [];
-let siguienteIdUnidad = unidades.length > 0 ? Math.max(...unidades.map(u => u.id)) + 1 : 1;
+let unidades = [];
+let siguienteIdUnidad = 1;
 let modoDesarrollo = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-// Inicialización
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Sistema de Control de Unidades - Iniciando...');
+// =============================================
+// INICIALIZACIÓN
+// =============================================
+
+// Función principal de inicialización
+async function inicializarSistema() {
+    console.log('🚀 Sistema de Control de Unidades - Iniciando v2.1.0...');
     
-    // Configurar fecha y hora
+    // 1. Cargar datos iniciales
+    await cargarDatosIniciales();
+    
+    // 2. Configurar fecha y hora
     actualizarFechaHora();
     setInterval(actualizarFechaHora, 1000);
     
-    // Configurar fecha de hoy por defecto
-    const { fecha: fechaHoy } = obtenerFechaHoraActual();
+    // 3. Configurar fecha/hora por defecto
+    const { fecha: fechaHoy, hora: horaActual } = obtenerFechaHoraActual();
     document.getElementById('unidad-fecha').value = fechaHoy;
-    
-    // Configurar hora actual por defecto
-    const { hora: horaActual } = obtenerFechaHoraActual();
     document.getElementById('unidad-hora').value = horaActual;
     
-    // Configurar eventos
+    // 4. Configurar eventos
+    configurarEventos();
+    
+    // 5. Inicializar componentes
+    inicializarCalendario();
+    cargarUnidades();
+    cargarDespacho();
+    actualizarEstadisticas();
+    controlarVisibilidadExportacion();
+    
+    // 6. Configurar URL para compartir
+    document.getElementById('url-compartir').value = window.location.href;
+    
+    // 7. Verificar si es la primera vez
+    if (!localStorage.getItem('primerUso')) {
+        setTimeout(() => {
+            mostrarInstrucciones();
+            localStorage.setItem('primerUso', 'true');
+        }, 1000);
+    }
+    
+    console.log('✅ Sistema inicializado correctamente');
+}
+
+// Cargar datos iniciales (localStorage o Firebase)
+async function cargarDatosIniciales() {
+    console.log('📦 Cargando datos iniciales...');
+    
+    // Intentar cargar desde Firebase primero
+    if (typeof cargarUnidadesDesdeFirebase === 'function' && usarFirebase) {
+        try {
+            const unidadesFirebase = await cargarUnidadesDesdeFirebase();
+            if (unidadesFirebase.length > 0) {
+                unidades = unidadesFirebase;
+                siguienteIdUnidad = unidades.length > 0 ? Math.max(...unidades.map(u => u.id)) + 1 : 1;
+                localStorage.setItem('unidadesPuebla', JSON.stringify(unidades));
+                console.log('✅ Datos cargados desde Firebase:', unidades.length, 'unidades');
+                return;
+            }
+        } catch (error) {
+            console.warn('⚠️ Error cargando desde Firebase, usando localStorage:', error);
+        }
+    }
+    
+    // Si no hay Firebase o falló, usar localStorage
+    unidades = JSON.parse(localStorage.getItem('unidadesPuebla')) || [];
+    siguienteIdUnidad = unidades.length > 0 ? Math.max(...unidades.map(u => u.id)) + 1 : 1;
+    console.log('📱 Datos cargados desde localStorage:', unidades.length, 'unidades');
+}
+
+// Configurar eventos
+function configurarEventos() {
     document.getElementById('nueva-unidad-form').addEventListener('submit', function(e) {
         e.preventDefault();
         guardarNuevaUnidad();
@@ -33,16 +88,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById('guardar-cambios-estatus').addEventListener('click', guardarCambiosEstatus);
     
-    // Cargar datos iniciales
-    inicializarCalendario();
-    cargarUnidades();
-    cargarDespacho();
-    actualizarEstadisticas();
-    
-    // Controlar visibilidad de botones de exportación
-    controlarVisibilidadExportacion();
-    
-    // Escuchar cambios de pestaña
     document.querySelectorAll('#myTab button').forEach(tab => {
         tab.addEventListener('shown.bs.tab', function (event) {
             controlarVisibilidadExportacion();
@@ -52,23 +97,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Configurar URL para compartir
-    document.getElementById('url-compartir').value = window.location.href;
-    
-    // Mostrar mensaje de bienvenida en desarrollo
-    if (modoDesarrollo) {
-        console.log('🔧 Modo desarrollo activado');
-        mostrarNotificacion('Modo desarrollo activo', 'info');
-    }
-    
-    // Verificar si es la primera vez
-    if (!localStorage.getItem('primerUso')) {
-        setTimeout(() => {
-            mostrarInstrucciones();
-            localStorage.setItem('primerUso', 'true');
-        }, 1000);
-    }
-});
+    // Evento para importar backup
+    document.getElementById('backup-file').addEventListener('change', function(e) {
+        importarBackupArchivo(e);
+    });
+}
 
 // =============================================
 // FUNCIONES PRINCIPALES
@@ -128,7 +161,11 @@ function formatearTelefono(telefono) {
     return telefono.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
 }
 
-function guardarNuevaUnidad() {
+// =============================================
+// GESTIÓN DE UNIDADES
+// =============================================
+
+async function guardarNuevaUnidad() {
     // Obtener valores del formulario
     const numero = document.getElementById('unidad-numero').value.trim();
     const fecha = document.getElementById('unidad-fecha').value.trim();
@@ -154,17 +191,17 @@ function guardarNuevaUnidad() {
     if (!linea) errores.push('Línea');
     
     if (errores.length > 0) {
-        alert(`❌ Campos obligatorios faltantes:\n\n• ${errores.join('\n• ')}`);
+        mostrarNotificacion(`❌ Campos obligatorios faltantes: ${errores.join(', ')}`, 'error');
         return;
     }
     
     if (!validarTelefono(telefono)) {
-        alert('📱 Por favor ingrese un teléfono válido (10 dígitos sin espacios)\n\nEjemplo: 5523456789');
+        mostrarNotificacion('📱 Teléfono inválido (10 dígitos sin espacios)', 'error');
         return;
     }
     
     if (!validarFormatoFecha(fecha)) {
-        alert('📅 Formato de fecha incorrecto\n\nUse: DD/MM/AAAA\nEjemplo: 15/12/2024');
+        mostrarNotificacion('📅 Formato de fecha incorrecto (DD/MM/AAAA)', 'error');
         return;
     }
     
@@ -187,9 +224,14 @@ function guardarNuevaUnidad() {
         usuarioRegistro: obtenerUsuarioActual()
     };
     
-    // Guardar en localStorage
+    // Guardar localmente
     unidades.push(nuevaUnidad);
     localStorage.setItem('unidadesPuebla', JSON.stringify(unidades));
+    
+    // Guardar en Firebase si está disponible
+    if (typeof guardarUnidadFirebase === 'function' && usarFirebase) {
+        guardarUnidadFirebase(nuevaUnidad);
+    }
     
     // Limpiar formulario (excepto fecha y hora)
     document.getElementById('unidad-numero').value = '';
@@ -208,21 +250,6 @@ function guardarNuevaUnidad() {
     cargarUnidades();
     cargarDespacho();
     actualizarEstadisticas();
-    
-    // Scroll a la nueva unidad (si está en visualización)
-    setTimeout(() => {
-        const visualizacionTab = document.getElementById('visualizacion-tab');
-        if (visualizacionTab.classList.contains('active')) {
-            const nuevaUnidadElement = document.querySelector(`[data-unidad-id="${nuevaUnidad.id}"]`);
-            if (nuevaUnidadElement) {
-                nuevaUnidadElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                nuevaUnidadElement.style.animation = 'pulse 0.5s';
-                setTimeout(() => {
-                    nuevaUnidadElement.style.animation = '';
-                }, 500);
-            }
-        }
-    }, 100);
 }
 
 function validarFormatoFecha(fecha) {
@@ -252,6 +279,9 @@ function cargarUnidades() {
     document.getElementById('contador-sencillos').textContent = sencillos.length;
     document.getElementById('contador-fulls').textContent = fulls.length;
     document.getElementById('total-unidades').textContent = `Total: ${unidadesActivas.length} unidades`;
+    
+    // Actualizar estadísticas
+    actualizarEstadisticas();
     
     // Cargar lista de sencillos
     const listaSencillos = document.getElementById('lista-sencillos');
@@ -429,7 +459,11 @@ function convertirFechaHora(fechaStr, horaStr) {
     }
 }
 
-function despacharUnidad(id) {
+// =============================================
+// DESPACHO DE UNIDADES
+// =============================================
+
+async function despacharUnidad(id) {
     const unidad = unidades.find(u => u.id === id);
     if (!unidad) {
         mostrarNotificacion('❌ Unidad no encontrada', 'error');
@@ -437,7 +471,7 @@ function despacharUnidad(id) {
     }
     
     if (!unidad.telefono || !validarTelefono(unidad.telefono)) {
-        alert(`📱 ${unidad.operador} no tiene un teléfono válido.\n\nTeléfono requerido: 10 dígitos sin espacios\nEjemplo: 5523456789`);
+        mostrarNotificacion(`📱 ${unidad.operador} no tiene un teléfono válido`, 'error');
         return;
     }
     
@@ -485,13 +519,22 @@ function despacharUnidad(id) {
     const urlWhatsApp = `https://web.whatsapp.com/send?phone=${telefonoFormateado}&text=${mensajeCodificado}`;
     
     if (confirm(`¿DESPACHAR UNIDAD ${unidad.numero}?\n\nOperador: ${unidad.operador}\nTeléfono: ${unidad.telefono}\nLínea: ${unidad.linea.toUpperCase()}`)) {
-        // Marcar como despachada
+        // Marcar como despachada localmente
         const unidadIndex = unidades.findIndex(u => u.id === id);
         if (unidadIndex !== -1) {
             unidades[unidadIndex].despachada = true;
             unidades[unidadIndex].fechaDespacho = new Date().toISOString();
             localStorage.setItem('unidadesPuebla', JSON.stringify(unidades));
             
+            // Actualizar en Firebase si está disponible
+            if (typeof actualizarUnidadFirebase === 'function' && usarFirebase) {
+                await actualizarUnidadFirebase(id, {
+                    despachada: true,
+                    fechaDespacho: new Date().toISOString()
+                });
+            }
+            
+            // Actualizar vistas
             cargarUnidades();
             cargarDespacho();
             actualizarEstadisticas();
@@ -508,6 +551,19 @@ function despacharUnidad(id) {
             }
         }, 2000);
     }
+}
+
+function obtenerTextoEstatus(estatus) {
+    const estatusMap = {
+        'taller': 'TALLER',
+        'listo': 'LISTO',
+        'sin-operador': 'SIN OPERADOR'
+    };
+    return estatusMap[estatus] || estatus;
+}
+
+function obtenerUsuarioActual() {
+    return navigator.userAgent.split(' ')[0] || 'Usuario';
 }
 
 // =============================================
@@ -553,7 +609,9 @@ function exportarPDF() {
         }).then(canvas => {
             // Restaurar elementos
             estilosOriginales.forEach(estilo => {
-                estilo.element.style.display = estilo.display;
+                if (estilo.element && estilo.element.style) {
+                    estilo.element.style.display = estilo.display;
+                }
             });
 
             const imgData = canvas.toDataURL('image/png');
@@ -678,14 +736,14 @@ function mostrarCalendario() {
 function seleccionarFecha(fecha) {
     document.getElementById('unidad-fecha').value = fecha;
     const modal = bootstrap.Modal.getInstance(document.getElementById('calendarioModal'));
-    modal.hide();
+    if (modal) modal.hide();
 }
 
 function usarFechaHoy() {
     const { fecha: fechaHoy } = obtenerFechaHoraActual();
     document.getElementById('unidad-fecha').value = fechaHoy;
     const modal = bootstrap.Modal.getInstance(document.getElementById('calendarioModal'));
-    modal.hide();
+    if (modal) modal.hide();
 }
 
 function obtenerNombreMes(mes) {
@@ -711,7 +769,7 @@ function abrirModalEditar(id) {
     modal.show();
 }
 
-function guardarCambiosEstatus() {
+async function guardarCambiosEstatus() {
     const id = parseInt(document.getElementById('editar-unidad-id').value);
     const nuevoEstatus = document.getElementById('editar-estatus').value;
     const nuevoUltimoViaje = document.getElementById('editar-ultimo-viaje').value;
@@ -728,6 +786,7 @@ function guardarCambiosEstatus() {
         return;
     }
     
+    // Actualizar localmente
     unidades[unidadIndex].estatus = nuevoEstatus;
     unidades[unidadIndex].ultimoViaje = nuevoUltimoViaje;
     unidades[unidadIndex].notas = nuevasNotas;
@@ -735,8 +794,18 @@ function guardarCambiosEstatus() {
     
     localStorage.setItem('unidadesPuebla', JSON.stringify(unidades));
     
+    // Actualizar en Firebase si está disponible
+    if (typeof actualizarUnidadFirebase === 'function' && usarFirebase) {
+        await actualizarUnidadFirebase(id, {
+            estatus: nuevoEstatus,
+            ultimoViaje: nuevoUltimoViaje,
+            notas: nuevasNotas,
+            fechaActualizacion: new Date().toISOString()
+        });
+    }
+    
     const modal = bootstrap.Modal.getInstance(document.getElementById('editarEstatusModal'));
-    modal.hide();
+    if (modal) modal.hide();
     
     cargarUnidades();
     cargarDespacho();
@@ -745,230 +814,4 @@ function guardarCambiosEstatus() {
     mostrarNotificacion('Estatus actualizado correctamente', 'success');
 }
 
-function obtenerTextoEstatus(estatus) {
-    const estatusMap = {
-        'taller': 'TALLER',
-        'listo': 'LISTO',
-        'sin-operador': 'SIN OPERADOR'
-    };
-    return estatusMap[estatus] || estatus;
-}
-
-function obtenerUsuarioActual() {
-    // En una versión futura con autenticación
-    return navigator.userAgent.split(' ')[0] || 'Usuario';
-}
-
-function mostrarNotificacion(mensaje, tipo = 'info') {
-    // Crear notificación
-    const notificacion = document.createElement('div');
-    notificacion.className = `alert alert-${tipo === 'error' ? 'danger' : tipo} alert-dismissible fade show position-fixed`;
-    notificacion.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        min-width: 300px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        animation: slideIn 0.3s ease;
-    `;
-    
-    const icono = tipo === 'success' ? 'check-circle' : 
-                 tipo === 'error' ? 'exclamation-circle' : 
-                 tipo === 'warning' ? 'exclamation-triangle' : 'info-circle';
-    
-    notificacion.innerHTML = `
-        <i class="fas fa-${icono} me-2"></i>
-        ${mensaje}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(notificacion);
-    
-    // Auto-eliminar después de 5 segundos
-    setTimeout(() => {
-        if (notificacion.parentNode) {
-            notificacion.remove();
-        }
-    }, 5000);
-}
-
-// =============================================
-// FUNCIONES DE CONFIGURACIÓN
-// =============================================
-
-function actualizarEstadisticas() {
-    const total = unidades.length;
-    const activas = unidades.filter(u => !u.despachada).length;
-    const despachadas = unidades.filter(u => u.despachada).length;
-    
-    document.getElementById('info-total-unidades').textContent = total;
-    document.getElementById('info-unidades-activas').textContent = activas;
-    document.getElementById('info-unidades-despachadas').textContent = despachadas;
-    document.getElementById('info-ultima-actualizacion').textContent = 
-        new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-}
-
-function exportarBackup() {
-    const backup = {
-        version: '2.0.0',
-        fechaBackup: new Date().toISOString(),
-        totalUnidades: unidades.length,
-        unidades: unidades
-    };
-    
-    const dataStr = JSON.stringify(backup, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `backup_unidades_puebla_${new Date().toISOString().slice(0,10)}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-    
-    mostrarNotificacion('✅ Respaldo exportado correctamente', 'success');
-}
-
-function importarBackup() {
-    document.getElementById('backup-file').click();
-}
-
-// Configurar el input file
-document.getElementById('backup-file').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const backup = JSON.parse(e.target.result);
-            
-            if (!backup.unidades || !Array.isArray(backup.unidades)) {
-                throw new Error('Formato de respaldo inválido');
-            }
-            
-            if (confirm(`¿Importar respaldo con ${backup.unidades.length} unidades?\n\nEsta acción reemplazará los datos actuales.`)) {
-                unidades = backup.unidades;
-                siguienteIdUnidad = unidades.length > 0 ? Math.max(...unidades.map(u => u.id)) + 1 : 1;
-                localStorage.setItem('unidadesPuebla', JSON.stringify(unidades));
-                
-                cargarUnidades();
-                cargarDespacho();
-                actualizarEstadisticas();
-                
-                mostrarNotificacion(`✅ Respaldo importado: ${backup.unidades.length} unidades`, 'success');
-            }
-        } catch (error) {
-            console.error('Error importando respaldo:', error);
-            mostrarNotificacion('❌ Error al importar respaldo', 'error');
-        }
-        
-        // Limpiar input
-        e.target.value = '';
-    };
-    reader.readAsText(file);
-});
-
-function limpiarUnidadesDespachadas() {
-    const unidadesDespachadas = unidades.filter(u => u.despachada);
-    
-    if (unidadesDespachadas.length === 0) {
-        mostrarNotificacion('No hay unidades despachadas para limpiar', 'info');
-        return;
-    }
-    
-    if (confirm(`¿Eliminar ${unidadesDespachadas.length} unidades despachadas?\n\nEsta acción no se puede deshacer.`)) {
-        unidades = unidades.filter(u => !u.despachada);
-        localStorage.setItem('unidadesPuebla', JSON.stringify(unidades));
-        
-        cargarUnidades();
-        cargarDespacho();
-        actualizarEstadisticas();
-        
-        mostrarNotificacion(`✅ ${unidadesDespachadas.length} unidades despachadas eliminadas`, 'success');
-    }
-}
-
-function limpiarTodo() {
-    if (unidades.length === 0) {
-        mostrarNotificacion('No hay unidades para eliminar', 'info');
-        return;
-    }
-    
-    if (confirm(`⚠️ ¿ELIMINAR TODAS LAS ${unidades.length} UNIDADES?\n\n⚠️ ESTA ACCIÓN NO SE PUEDE DESHACER\n⚠️ Se perderán todos los datos registrados`)) {
-        unidades = [];
-        siguienteIdUnidad = 1;
-        localStorage.removeItem('unidadesPuebla');
-        localStorage.removeItem('primerUso');
-        
-        cargarUnidades();
-        cargarDespacho();
-        actualizarEstadisticas();
-        
-        mostrarNotificacion('✅ Todas las unidades han sido eliminadas', 'success');
-    }
-}
-
-function copiarURL() {
-    const urlInput = document.getElementById('url-compartir');
-    urlInput.select();
-    urlInput.setSelectionRange(0, 99999);
-    
-    navigator.clipboard.writeText(urlInput.value).then(() => {
-        mostrarNotificacion('✅ URL copiada al portapapeles', 'success');
-    });
-}
-
-function compartirWhatsApp() {
-    const url = window.location.href;
-    const mensaje = encodeURIComponent(`🚛 *Sistema de Control de Unidades - FRATSA*\n\nAccede al sistema aquí:\n${url}\n\n*Patio Puebla*`);
-    window.open(`https://wa.me/?text=${mensaje}`, '_blank');
-}
-
-function mostrarInstrucciones() {
-    const modal = new bootstrap.Modal(document.getElementById('instruccionesModal'));
-    modal.show();
-}
-
-function rellenarEjemplo() {
-    document.getElementById('unidad-numero').value = 'FR-' + Math.floor(Math.random() * 100).toString().padStart(3, '0');
-    document.getElementById('unidad-operador').value = 'Juan Pérez García';
-    document.getElementById('unidad-telefono').value = '5512345678';
-    document.getElementById('unidad-estatus').value = 'listo';
-    document.getElementById('tipo-sencillo').checked = true;
-    document.getElementById('linea-fratsa').checked = true;
-    document.getElementById('unidad-ultimo-viaje').value = 'Ciudad de México → Puebla';
-    document.getElementById('unidad-notas').value = 'Revisar presión de llantas';
-    
-    mostrarNotificacion('📝 Formulario rellenado con datos de ejemplo', 'info');
-}
-
-function actualizarVista() {
-    cargarUnidades();
-    cargarDespacho();
-    actualizarEstadisticas();
-    mostrarNotificacion('✅ Vista actualizada', 'success');
-}
-
-// =============================================
-// ANIMACIONES CSS ADICIONALES
-// =============================================
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.02); }
-        100% { transform: scale(1); }
-    }
-    
-    .btn:active {
-        transform: scale(0.98);
-    }
-`;
-document.head.appendChild(style);
+// Continuo con las funciones de notificaciones en la siguiente respuesta...
