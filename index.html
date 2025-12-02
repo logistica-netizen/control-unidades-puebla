@@ -11,13 +11,17 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
     <!-- Nuestros estilos -->
     <link rel="stylesheet" href="style.css">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/3097/3097140.png">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚛</text></svg>">
     
-    <!-- Para PWA (aplicación web progresiva) -->
+    <!-- Para PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#8B0000">
 </head>
@@ -34,7 +38,7 @@
                         <div>
                             <h4 class="mb-0">FRATSA S.A. DE C.V.</h4>
                             <p class="mb-0">Control de Unidades - Patio Puebla</p>
-                            <small class="text-warning" id="version-indicator">Modo Local</small>
+                            <span id="version-indicator" class="badge bg-warning">Modo Local</span>
                         </div>
                     </div>
                 </div>
@@ -247,6 +251,42 @@
                         </div>
                     </div>
                     
+                    <!-- Estadísticas rápidas -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-center bg-light">
+                                <div class="card-body py-2">
+                                    <h5 class="card-title mb-0" id="stats-total">0</h5>
+                                    <small class="text-muted">Total Unidades</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center bg-light">
+                                <div class="card-body py-2">
+                                    <h5 class="card-title mb-0" id="stats-activas">0</h5>
+                                    <small class="text-muted">Activas</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center bg-light">
+                                <div class="card-body py-2">
+                                    <h5 class="card-title mb-0" id="stats-despachadas">0</h5>
+                                    <small class="text-muted">Despachadas</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center bg-light">
+                                <div class="card-body py-2">
+                                    <h5 class="card-title mb-0" id="stats-listas">0</h5>
+                                    <small class="text-muted">Listas para Despacho</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Cuadrículas de Unidades -->
                     <div class="row">
                         <!-- Cuadrícula para Sencillos -->
@@ -396,7 +436,7 @@
                                             <span class="badge bg-warning" id="info-modo-almacenamiento">LocalStorage</span>
                                         </li>
                                         <li class="list-group-item">
-                                            <small class="text-muted">Versión: 2.0.0 | Última actualización: <span id="info-ultima-actualizacion">Hoy</span></small>
+                                            <small class="text-muted">Versión: 2.1.0 | Última actualización: <span id="info-ultima-actualizacion">Hoy</span></small>
                                         </li>
                                     </ul>
                                 </div>
@@ -534,8 +574,8 @@
                             </ul>
                             
                             <div class="alert alert-info mt-3">
-                                <i class="fas fa-lightbulb me-2"></i>
-                                <strong>Tip:</strong> Puedes instalar esta aplicación en tu celular como una app nativa desde el menú de tu navegador.
+                                <i class="fas fa-bolt me-2"></i>
+                                <strong>¡NUEVO!</strong> Sincronización en tiempo real con Firebase. Los cambios se ven en todas las computadoras al instante.
                             </div>
                         </div>
                     </div>
@@ -553,11 +593,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
-    <!-- Nuestro JavaScript -->
+    <!-- Nuestros scripts -->
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
-    
-    <!-- Firebase (opcional para versión futura) -->
-    <!-- <script src="firebase-config.js"></script> -->
 
     <!-- Botones fijos en la parte inferior -->
     <div class="fixed-bottom p-3">
